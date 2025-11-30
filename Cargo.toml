@@ -8,6 +8,8 @@ edition = "2024"
 description = "An implementation of a metamodule using Magic Mount, Based on MKSU, Template is from meta-overlay."
 authors = ["7a72", "Tools-cx-app"]
 license = "GPL-3.0"
+
+[package.metadata.magic_mount_rs]
 update = "https://github.com/Tools-cx-app/meta-magic_mount/raw/master/update/update.json"
 
 [dependencies]

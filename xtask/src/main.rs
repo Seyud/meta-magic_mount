@@ -16,7 +16,6 @@ use crate::zip_ext::zip_create_from_directory_with_options;
 #[derive(Deserialize)]
 struct Package {
     pub version: String,
-    pub update: String,
 }
 
 #[derive(Deserialize)]
@@ -72,7 +71,6 @@ fn cal_version_code(version: &str) -> Result<usize> {
 fn update() -> Result<()> {
     let toml = fs::read_to_string("Cargo.toml")?;
     let data: CargoConfig = toml::from_str(&toml)?;
-    let output = Path::new("output");
 
     build()?;
 
