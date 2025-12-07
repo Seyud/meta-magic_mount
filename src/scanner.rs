@@ -14,11 +14,8 @@ pub struct ModuleInfo {
     pub skip: bool,
 }
 
-fn read_prop<S>(vaule: S, key: &str) -> Option<String>
-where
-    S: AsRef<str> + Into<String>,
-{
-    for line in vaule.as_ref().lines() {
+fn read_prop(vaule: &str, key: &str) -> Option<String> {
+    for line in vaule.lines() {
         if line.starts_with(key)
             && let Some((_, value)) = line.split_once('=')
         {

@@ -136,6 +136,73 @@ impl MagicMount {
         }
     }
 
+    fn moving_tmpfs(&self) -> Result<()> {
+        log::debug!(
+            "moving tmpfs {} -> {}",
+            self.work_dir_path.display(),
+            self.path.display()
+        );
+
+        if let Err(e) = mount_remount(
+            &self.work_dir_path,
+            MountFlags::RDONLY | MountFlags::BIND,
+            "",
+        ) {
+            log::warn!("make dir {} ro: {e:#?}", self.path.display());
+        }
+        mount_move(&self.work_dir_path, &self.path)
+            .context("move self")
+            .with_context(|| {
+                format!(
+                    "moving tmpfs {} -> {}",
+                    self.work_dir_path.display(),
+                    self.path.display()
+                )
+            })?;
+        // make private to reduce peer group count
+        if let Err(e) = mount_change(&self.path, MountPropagationFlags::PRIVATE) {
+            log::warn!("make dir {} private: {e:#?}", self.path.display());
+        }
+
+        #[cfg(any(target_os = "linux", target_os = "android"))]
+        if self.umount {
+            // tell ksu about this one too
+            let _ = send_unmountable(&self.path);
+        }
+
+        Ok(())
+    }
+
+    fn creatimg_tmpfs_skeleton(&self) -> Result<()> {
+        log::debug!(
+            "creating tmpfs skeleton for {} at {}",
+            self.path.display(),
+            self.work_dir_path.display()
+        );
+
+        let _ = create_dir_all(&self.work_dir_path);
+
+        let (metadata, path) = {
+            if self.path.exists() {
+                (self.path.metadata()?, &self.path)
+            } else if let Some(module_path) = &self.node.module_path {
+                (module_path.metadata()?, module_path)
+            } else {
+                bail!("cannot mount root dir {}!", self.path.display());
+            }
+        };
+
+        chmod(&self.work_dir_path, Mode::from_raw_mode(metadata.mode()))?;
+        chown(
+            &self.work_dir_path,
+            Some(Uid::from_raw(metadata.uid())),
+            Some(Gid::from_raw(metadata.gid())),
+        )?;
+        lsetfilecon(&self.work_dir_path, lgetfilecon(path)?.as_str())?;
+
+        Ok(())
+    }
+
     fn handle_directory(&mut self) -> Result<()> {
         let mut create_tmpfs =
             !self.has_tmpfs && self.node.replace && self.node.module_path.is_some();
@@ -148,31 +215,7 @@ impl MagicMount {
         let has_tmpfs = self.has_tmpfs || create_tmpfs;
 
         if has_tmpfs {
-            log::debug!(
-                "creating tmpfs skeleton for {} at {}",
-                self.path.display(),
-                self.work_dir_path.display()
-            );
-
-            let _ = create_dir_all(&self.work_dir_path);
-
-            let (metadata, path) = {
-                if self.path.exists() {
-                    (self.path.metadata()?, &self.path)
-                } else if let Some(module_path) = &self.node.module_path {
-                    (module_path.metadata()?, module_path)
-                } else {
-                    bail!("cannot mount root dir {}!", self.path.display());
-                }
-            };
-
-            chmod(&self.work_dir_path, Mode::from_raw_mode(metadata.mode()))?;
-            chown(
-                &self.work_dir_path,
-                Some(Uid::from_raw(metadata.uid())),
-                Some(Gid::from_raw(metadata.gid())),
-            )?;
-            lsetfilecon(&self.work_dir_path, lgetfilecon(path)?.as_str())?;
+            self.creatimg_tmpfs_skeleton()?;
         }
 
         if create_tmpfs {
@@ -265,38 +308,7 @@ impl MagicMount {
         }
 
         if create_tmpfs {
-            log::debug!(
-                "moving tmpfs {} -> {}",
-                self.work_dir_path.display(),
-                self.path.display()
-            );
-
-            if let Err(e) = mount_remount(
-                &self.work_dir_path,
-                MountFlags::RDONLY | MountFlags::BIND,
-                "",
-            ) {
-                log::warn!("make dir {} ro: {e:#?}", self.path.display());
-            }
-            mount_move(&self.work_dir_path, &self.path)
-                .context("move self")
-                .with_context(|| {
-                    format!(
-                        "moving tmpfs {} -> {}",
-                        self.work_dir_path.display(),
-                        self.path.display()
-                    )
-                })?;
-            // make private to reduce peer group count
-            if let Err(e) = mount_change(&self.path, MountPropagationFlags::PRIVATE) {
-                log::warn!("make dir {} private: {e:#?}", self.path.display());
-            }
-
-            #[cfg(any(target_os = "linux", target_os = "android"))]
-            if self.umount {
-                // tell ksu about this one too
-                let _ = send_unmountable(&self.path);
-            }
+            self.moving_tmpfs()?;
         }
         Ok(())
     }
