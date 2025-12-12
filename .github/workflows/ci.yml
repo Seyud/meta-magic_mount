@@ -2,8 +2,16 @@ name: ci-build
 on:
   push:
     branches: ["master"]
+    paths:
+      - 'src/**'
+      - 'Cargo.*'
+      - 'module/**'
   pull_request:
     branches: ["master"]
+    paths:
+      - 'src/**'
+      - 'Cargo.*'
+      - 'module/**'
 env:
   CARGO_TERM_COLOR: always
 jobs:
