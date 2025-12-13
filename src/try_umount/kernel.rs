@@ -44,24 +44,27 @@ where
         fd
     });
 
-    unsafe {
+    let ret = unsafe {
         #[cfg(target_env = "gnu")]
-        let ret = libc::ioctl(fd as libc::c_int, KSU_IOCTL_ADD_TRY_UMOUNT, &cmd);
-
-        #[cfg(not(target_env = "gnu"))]
-        let ret = libc::ioctl(fd as libc::c_int, KSU_IOCTL_ADD_TRY_UMOUNT, &cmd);
-
-        if ret < 0 {
-            log::error!(
-                "umount {} failed: {}",
-                target.as_ref().display(),
-                io::Error::last_os_error()
-            );
-
-            return Ok(());
+        {
+            libc::ioctl(fd as libc::c_int, KSU_IOCTL_ADD_TRY_UMOUNT, &cmd)
         }
-
-        log::info!("umount {} successful!", target.as_ref().display());
+        #[cfg(not(target_env = "gnu"))]
+        {
+            libc::ioctl(fd as libc::c_int, KSU_IOCTL_ADD_TRY_UMOUNT, &cmd)
+        }
     };
+    
+    if ret < 0 {
+        log::error!(
+            "umount {} failed: {}",
+            target.as_ref().display(),
+            io::Error::last_os_error()
+        );
+
+        return Ok(());
+    }
+
+    log::info!("umount {} successful!", target.as_ref().display());
     Ok(())
 }
