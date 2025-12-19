@@ -67,11 +67,8 @@ where
 }
 
 pub fn select_temp_dir() -> Result<PathBuf> {
-    log::debug!("searching for suitable tmpfs mount point...");
-
     for candidate in TMPFS_CANDIDATES {
         let path = Path::new(candidate);
-        log::debug!("checking tmpfs candidate: {}", path.display());
 
         if !path.exists() {
             continue;
@@ -84,7 +81,7 @@ pub fn select_temp_dir() -> Result<PathBuf> {
     }
 
     bail!(
-        "no writable tmpfs found in candidates: {}",
+        "no tmpfs found in candidates: {}",
         TMPFS_CANDIDATES.join(", ")
     )
 }
