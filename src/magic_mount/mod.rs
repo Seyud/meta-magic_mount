@@ -42,7 +42,7 @@ fn collect_module_files(module_dir: &Path, extra_partitions: &[String]) -> Resul
             let prop = entry.path().join("module.prop");
             let string = fs::read_to_string(prop)?;
             for line in string.lines() {
-                if line.starts_with("name")
+                if line.starts_with("id")
                     && let Some((_, value)) = line.split_once('=')
                 {
                     validate_module_id(value)?;
