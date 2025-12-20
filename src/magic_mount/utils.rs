@@ -154,15 +154,16 @@ pub fn collect_module_files(
             continue;
         }
 
-        {
-            let prop = entry.path().join("module.prop");
-            let string = fs::read_to_string(prop)?;
-            for line in string.lines() {
-                if line.starts_with("id")
-                    && let Some((_, value)) = line.split_once('=')
-                {
-                    validate_module_id(value)?;
-                }
+        let prop = entry.path().join("module.prop");
+        if !prop.exists() {
+            continue;
+        }
+        let string = fs::read_to_string(prop)?;
+        for line in string.lines() {
+            if line.starts_with("id")
+                && let Some((_, value)) = line.split_once('=')
+            {
+                validate_module_id(value)?;
             }
         }
 
