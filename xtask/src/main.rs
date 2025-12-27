@@ -116,8 +116,6 @@ fn build() -> Result<()> {
     let mut cargo = cargo_ndk();
     let args = vec![
         "build",
-        "--target",
-        "aarch64-linux-android",
         "-Z",
         "build-std",
         "-Z",
@@ -142,8 +140,13 @@ fn build() -> Result<()> {
     }
 
     file::copy(
-        bin_path(),
-        temp_dir.join("magic_mount_rs"),
+        aarch64_bin_path(),
+        temp_dir.join("magic_mount_rs.aarch64"),
+        &file::CopyOptions::new().overwrite(true),
+    )?;
+    file::copy(
+        armv7_bin_path(),
+        temp_dir.join("magic_mount_rs.armv7"),
         &file::CopyOptions::new().overwrite(true),
     )?;
 
@@ -168,18 +171,34 @@ fn temp_dir() -> PathBuf {
     Path::new("output").join(".temp")
 }
 
-fn bin_path() -> PathBuf {
+fn aarch64_bin_path() -> PathBuf {
     Path::new("target")
         .join("aarch64-linux-android")
         .join("release")
         .join("magic_mount_rs")
 }
+
+fn armv7_bin_path() -> PathBuf {
+    Path::new("target")
+        .join("armv7-linux-androideabi")
+        .join("release")
+        .join("magic_mount_rs")
+}
+
 fn cargo_ndk() -> Command {
     let mut command = Command::new("cargo");
     command
-        .args(["+nightly", "ndk", "--platform", "31", "-t", "arm64-v8a"])
-        .env("RUSTFLAGS", "-C default-linker-libraries")
-        .env("CARGO_CFG_BPF_TARGET_ARCH", "aarch64");
+        .args([
+            "+nightly",
+            "ndk",
+            "--platform",
+            "31",
+            "-t",
+            "arm64-v8a",
+            "-t",
+            "armeabi-v7a",
+        ])
+        .env("RUSTFLAGS", "-C default-linker-libraries");
     command
 }
 

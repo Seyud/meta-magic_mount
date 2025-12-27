@@ -6,8 +6,32 @@ fi
 
 ui_print "- Detecting device architecture..."
 
+ABI=$(getprop ro.product.cpu.abi)
+
+if [ -z "$ABI" ]; then
+  abort "! Failed to detect device architecture"
+fi
+
+ui_print "  Detected ABI: $ABI"
+
+case "$ABI" in
+arm64-v8a)
+  ui_print "  ✓ Selected architecture: ARM64"
+  ARCH_BINARY="magic_mount_rs.aarch64"
+  ;;
+armeabi-v7a)
+  ui_print "  ✓ Selected architecture: ARMv7"
+  ARCH_BINARY="magic_mount_rs.armv7"
+  ;;
+*)
+  abort "! Unsupported architecture: $ABI"
+  ;;
+esac
+
+ui_print "- Installing architecture-specific binary"
+
 # Rename the selected binary to the generic name
-mv "$MODPATH/magic_mount_rs" "$MODPATH/meta-mm" || abort "! Failed to rename binary"
+mv "$MODPATH/$ARCH_BINARY" "$MODPATH/meta-mm" || abort "! Failed to rename binary"
 
 # Ensure the binary is executable
 chmod 755 "$MODPATH/meta-mm" || abort "! Failed to set permissions"
