@@ -7,6 +7,7 @@ use std::{
 };
 
 use anyhow::Result;
+use extattr::lgetxattr;
 use rustix::path::Arg;
 
 use crate::defs::{REPLACE_DIR_FILE_NAME, REPLACE_DIR_XATTR};
@@ -84,9 +85,8 @@ impl Node {
     where
         P: AsRef<Path>,
     {
-        if let Ok(v) = xattr::get(&path, REPLACE_DIR_XATTR)
-            && let Some(s) = v
-            && String::from_utf8_lossy(&s) == "y"
+        if let Ok(v) = lgetxattr(&path, REPLACE_DIR_XATTR)
+            && String::from_utf8_lossy(&v) == "y"
         {
             return true;
         }
