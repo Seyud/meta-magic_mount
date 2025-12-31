@@ -55,6 +55,8 @@ partitions = []
 
 * Node.js / npm
 
+* pnpm and vite as dependency and frontend for webui
+
 环境变量：
 ```shell
 export ANDROID_NDK_HOME=<path/to/ndk>
