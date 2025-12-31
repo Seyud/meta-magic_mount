@@ -121,6 +121,9 @@ impl Node {
             };
             if let Some(file_type) = file_type {
                 let replace = file_type == NodeFileType::Directory && Self::dir_is_replace(&path);
+                if replace {
+                    log::debug!("{} need replace", path.display());
+                }
                 return Some(Self {
                     name: name.to_string(),
                     file_type,
