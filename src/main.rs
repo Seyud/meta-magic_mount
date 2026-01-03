@@ -9,10 +9,9 @@ mod magic_mount;
 mod scanner;
 mod utils;
 
-use std::{io::Write, path::PathBuf};
+use std::path::PathBuf;
 
 use anyhow::{Context, Result};
-use env_logger::Builder;
 use mimalloc::MiMalloc;
 use rustix::{
     mount::{MountFlags, mount},
@@ -26,23 +25,37 @@ static GLOBAL: MiMalloc = MiMalloc;
 
 fn init_logger(verbose: bool) {
     let level = if verbose {
-        log::LevelFilter::Debug
+        log::LevelFilter::Trace
     } else {
-        log::LevelFilter::Info
+        log::LevelFilter::Debug
     };
 
-    let mut builder = Builder::new();
+    #[cfg(not(target_os = "android"))]
+    {
+        use std::io::Write;
 
-    builder.format(|buf, record| {
-        writeln!(
-            buf,
-            "[{}] [{}] {}",
-            record.level(),
-            record.target(),
-            record.args()
-        )
-    });
-    builder.filter_level(level).init();
+        let mut builder = env_logger::Builder::new();
+
+        builder.format(|buf, record| {
+            writeln!(
+                buf,
+                "[{}] [{}] {}",
+                record.level(),
+                record.target(),
+                record.args()
+            )
+        });
+        builder.filter_level(level).init();
+    }
+
+    #[cfg(target_os = "android")]
+    {
+        android_logger::init_once(
+            android_logger::Config::default()
+                .with_max_level(level)
+                .with_tag("MagicMount"),
+        );
+    }
 
     log::info!("log level: {}", level.as_str());
 }
