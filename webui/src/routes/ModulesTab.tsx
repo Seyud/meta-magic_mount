@@ -61,17 +61,12 @@ export default function ModulesTab() {
               </svg>
             </md-icon>
           </div>
-          <p class="desc-text">
-            {store.L.modules?.desc ??
-              "Modules are strictly managed by Magic Mount strategy."}
-          </p>
+          <p class="desc-text">{store.L.modules.desc}</p>
         </div>
 
         <div class="search-section">
           <md-outlined-text-field
-            prop:label={
-              store.L.modules?.searchPlaceholder ?? "Search modules..."
-            }
+            prop:label={store.L.modules.searchPlaceholder}
             prop:value={searchQuery()}
             on:input={handleInput}
             class="search-field"
@@ -112,7 +107,7 @@ export default function ModulesTab() {
                 </div>
                 <p>
                   {store.modules.length === 0
-                    ? (store.L.modules?.empty ?? "No modules found")
+                    ? store.L.modules.empty
                     : "No matching modules"}
                 </p>
               </div>
@@ -195,7 +190,7 @@ export default function ModulesTab() {
         <md-filled-tonal-icon-button
           on:click={() => store.loadModules()}
           prop:disabled={store.loading.modules}
-          prop:title={store.L.modules?.reload ?? "Refresh"}
+          prop:title={store.L.modules.reload}
         >
           <md-icon>
             <svg viewBox="0 0 24 24">
