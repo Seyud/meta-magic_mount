@@ -1,6 +1,8 @@
 // Copyright 2025 Magic Mount-rs Authors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+pub const MODULE_PATH: &str = "/data/adb/modules/";
+
 // utils
 pub const SELINUX_XATTR: &str = "security.selinux";
 pub const TMPFS_CANDIDATES: &[&str] = &["/debug_ramdisk", "/patch_hw", "/oem", "/root", "/sbin"];

@@ -9,7 +9,7 @@ mod magic_mount;
 mod scanner;
 mod utils;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use mimalloc::MiMalloc;
@@ -18,7 +18,7 @@ use rustix::{
     path::Arg,
 };
 
-use crate::config::Config;
+use crate::{config::Config, defs::MODULE_PATH};
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
@@ -60,7 +60,7 @@ fn main() -> Result<()> {
     if args.len() > 1 {
         match args[1].as_str() {
             "scan" => {
-                let modules = scanner::scan_modules(&config.moduledir, &config.partitions);
+                let modules = scanner::scan_modules(MODULE_PATH, &config.partitions);
 
                 if let Some(s) = args.get(2)
                     && s.as_str() == "--json"
@@ -119,7 +119,7 @@ fn main() -> Result<()> {
 
     let result = magic_mount::magic_mount(
         &tempdir,
-        &config.moduledir,
+        Path::new(MODULE_PATH),
         &config.mountsource,
         &config.partitions,
         config.umount,

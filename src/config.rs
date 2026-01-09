@@ -1,7 +1,7 @@
 // Copyright 2025 Magic Mount-rs Authors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use std::{fmt, fs, path::PathBuf};
+use std::{fmt, fs};
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
@@ -10,8 +10,6 @@ use crate::defs::CONFIG_FILE;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
-    #[serde(default = "default_moduledir")]
-    pub moduledir: PathBuf,
     #[serde(default = "default_mountsource")]
     pub mountsource: String,
     pub partitions: Vec<String>,
@@ -20,17 +18,12 @@ pub struct Config {
     pub umount: bool,
 }
 
-fn default_moduledir() -> PathBuf {
-    PathBuf::from("/data/adb/modules/")
-}
-
 fn default_mountsource() -> String {
     String::from("KSU")
 }
 
 impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "module real path: {}", self.moduledir.display())?;
         writeln!(f, "mount source: {}", self.mountsource)?;
         if self.partitions.is_empty() {
             write!(f, "no extra partitions")
